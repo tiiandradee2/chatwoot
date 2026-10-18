@@ -1,4 +1,4 @@
-<%= render "super_admin/application/standalone", heading: t("installation.onboarding.heading") do %>
+<%= render "super_admin/application/standalone", heading: t("installation.onboarding.heading", installation_name: GlobalConfig.get_value("INSTALLATION_NAME").presence || "Inbox") do %>
   <%= form_tag('/installation/onboarding', class: 'space-y-4') do %>
     <div>
       <label for="user_name" class="text-label"><%= t("installation.onboarding.name") %></label>

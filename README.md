@@ -142,15 +142,15 @@ docker compose -f docker-compose.local.yml run --rm rails bundle exec rails db:c
 docker compose -f docker-compose.local.yml up -d
 ```
 
-Abra http://localhost:3000. A página de login mostra o nome e o logo placeholder **Inbox**.
+Abra http://localhost:3000. Na primeira subida o app mostra o formulário de instalação (nome, empresa, e-mail, senha). Esse formulário cria o super admin e a primeira conta. Deixe desmarcada a opção de receber novidades: ela registra a instância no hub do upstream. O título e o logo são o placeholder **Inbox**.
 
-`ENABLE_ACCOUNT_SIGNUP` no `.env` não liga o cadastro depois do `db:chatwoot_prepare`. O valor que vale é o de `installation_configs`, semeado como `false` em `config/installation_config.yml`. **false é o padrão de produção**: conta nova nasce pela API da agenda, não pelo formulário público. Para criar o primeiro admin nesta máquina, rode:
+`ENABLE_ACCOUNT_SIGNUP` no `.env` não liga o cadastro público depois do `db:chatwoot_prepare`. O valor que vale é o de `installation_configs`, semeado como `false` em `config/installation_config.yml`. **false é o padrão de produção**: conta nova nasce pela API da agenda, não pelo formulário público. Se o formulário de instalação já foi concluído, crie outro admin com:
 
 ```bash
-docker compose -f docker-compose.local.yml exec rails bundle exec rails runner "admin = SuperAdmin.new(name: 'Admin', email: 'admin@localhost', password: 'Password1!'); admin.skip_confirmation!; admin.save!; account = Account.create!(name: 'Local', locale: 'pt_BR'); AccountUser.create!(account: account, user: admin, role: :administrator)"
+docker compose -f docker-compose.local.yml exec rails bundle exec rails runner "admin = SuperAdmin.new(name: 'Admin', email: 'admin@example.com', password: 'Password1!'); admin.skip_confirmation!; admin.save!; account = Account.create!(name: 'Local', locale: 'pt_BR'); AccountUser.create!(account: account, user: admin, role: :administrator)"
 ```
 
-Entre em http://localhost:3000 com `admin@localhost` / `Password1!`. O Super Admin fica em http://localhost:3000/super_admin/sign_in. Troque a senha e o `SECRET_KEY_BASE` do `.env` antes de qualquer uso que não seja a sua máquina. Para ligar o cadastro público só neste ambiente, no Super Admin abra Installation Configs e mude `ENABLE_ACCOUNT_SIGNUP` para `true`.
+Entre em http://localhost:3000 com `admin@example.com` / `Password1!`. O Super Admin fica em http://localhost:3000/super_admin/sign_in. Troque a senha e o `SECRET_KEY_BASE` do `.env` antes de qualquer uso que não seja a sua máquina. Para ligar o cadastro público só neste ambiente, no Super Admin abra Installation Configs e mude `ENABLE_ACCOUNT_SIGNUP` para `true`.
 
 Para parar: `docker compose -f docker-compose.local.yml down`. Os dados ficam nos volumes. `docker compose -f docker-compose.local.yml down -v` apaga o banco.
 
