@@ -1,0 +1,31 @@
+name: CE-only guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  no-enterprise:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if proprietary trees reappear
+        run: |
+          set -euo pipefail
+          failed=0
+          if [ -e enterprise ]; then
+            echo "::error::enterprise/ is present. This fork ships Community Edition only. Remove it the same way .github/workflows/publish_foss_docker.yml does: rm -rf enterprise spec/enterprise"
+            failed=1
+          fi
+          if [ -e spec/enterprise ]; then
+            echo "::error::spec/enterprise/ is present. This fork ships Community Edition only. Remove it with: rm -rf spec/enterprise"
+            failed=1
+          fi
+          exit "$failed"

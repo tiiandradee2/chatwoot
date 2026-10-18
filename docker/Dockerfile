@@ -152,4 +152,8 @@ COPY --from=pre-builder /app/.git_sha /app/.git_sha
 
 WORKDIR /app
 
+# Community Edition. publish_foss_docker.yml appends the same value;
+# publish_ee_docker.yml appends CW_EDITION=ee after this line, which wins there.
+ENV CW_EDITION=ce
+
 EXPOSE 3000

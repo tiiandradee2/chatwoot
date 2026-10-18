@@ -1,0 +1,70 @@
+# Local Community Edition stack, built from this repository.
+# Separate from docker-compose.yaml, which is the upstream Vite dev stack.
+# Copy docker/env.example to .env before the first build.
+# Commands: see README, "Como rodar localmente".
+
+x-chatwoot: &chatwoot
+  image: chatwoot-ce:local
+  env_file: .env
+  environment:
+    CW_EDITION: ce
+    RAILS_ENV: production
+    NODE_ENV: production
+    INSTALLATION_ENV: docker
+  volumes:
+    - storage_data:/app/storage
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chatwoot_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d chatwoot_production']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rails:
+    <<: *chatwoot
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    entrypoint: docker/entrypoints/rails.sh
+    command: ['bundle', 'exec', 'rails', 's', '-b', '0.0.0.0', '-p', '3000']
+
+  sidekiq:
+    <<: *chatwoot
+    restart: unless-stopped
+    entrypoint: docker/entrypoints/rails.sh
+    command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
+
+volumes:
+  postgres_data:
+  redis_data:
+  storage_data:
