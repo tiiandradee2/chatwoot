@@ -132,3 +132,15 @@ Practical checklist for any change impacting core logic or public APIs
 ## Branding / White-labeling note
 
 - For user-facing strings that currently contain "Chatwoot" but should adapt to branded/self-hosted installs, prefer applying `replaceInstallationName` from `shared/composables/useBranding` in the UI layer (for example tooltip and suggestion labels) instead of adding hardcoded brand-specific copy.
+
+## Cursor Cloud specific instructions
+
+- Cloud Agents already have Ruby 3.4.4, Node 24.13.0, pnpm 10.2.0, Overmind, PostgreSQL 16 with pgvector, and Redis. Do not use rbenv here. The shell's `node` can be `/exec-daemon/node` (Node 22). Put the project toolchains first:
+
+```bash
+export PATH="/opt/node-v24.13.0/bin:/opt/hostedtoolcache/Ruby/3.4.4/x64/bin:$PATH"
+```
+
+- On boot, `start` launches Postgres and Redis, runs `bundle exec rails db:chatwoot_prepare`, then `overmind start -f Procfile.dev` (Rails on port 3000, Vite on 3036, Sidekiq). Postgres on localhost uses trust auth. Redis is `redis://localhost:6379` with an empty password. `.env` is generated from `.env.example` for that layout.
+- `db/seeds.rb` creates the development login `john@acme.inc` / `Password1!` on account Acme Inc the first time the database is prepared.
+- `db:migrate` rewrites model annotations and may touch `db/schema.rb`. Restore those files when they are not part of the change.
